@@ -79,17 +79,17 @@
 
 
 
-<meta name="description" content="Karmai&apos;s blog">
+<meta name="description" content="最近公司项目是用的java的ssm框架，然后需要用到事务管理，数据库是sqlserver，然后遇到一些问题，写个博客记录下。   首先项目需求是在控制器中对若干个数据库进行数据的操作，然后当其中某一个操作发生异常，则进行事务回滚，并且其中某些操作需要读取前面对数据库增加的数据，所以数据库事务级别需要设置为READ_UNCOMMITTED   因为是第一次接触事务管理，所以按照官方文档示例，在se">
 <meta property="og:type" content="article">
 <meta property="og:title" content="在ssm框架中进行事务管理遇到的一些坑">
 <meta property="og:url" content="http://yoursite.com/2019/12/24/在ssm框架中进行事务管理遇到的一些坑/index.html">
 <meta property="og:site_name" content="Karmai&#39;s blog">
-<meta property="og:description" content="Karmai&apos;s blog">
+<meta property="og:description" content="最近公司项目是用的java的ssm框架，然后需要用到事务管理，数据库是sqlserver，然后遇到一些问题，写个博客记录下。   首先项目需求是在控制器中对若干个数据库进行数据的操作，然后当其中某一个操作发生异常，则进行事务回滚，并且其中某些操作需要读取前面对数据库增加的数据，所以数据库事务级别需要设置为READ_UNCOMMITTED   因为是第一次接触事务管理，所以按照官方文档示例，在se">
 <meta property="og:locale" content="chinese">
-<meta property="og:updated_time" content="2019-12-24T14:06:07.259Z">
+<meta property="og:updated_time" content="2019-12-24T14:59:37.857Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="在ssm框架中进行事务管理遇到的一些坑">
-<meta name="twitter:description" content="Karmai&apos;s blog">
+<meta name="twitter:description" content="最近公司项目是用的java的ssm框架，然后需要用到事务管理，数据库是sqlserver，然后遇到一些问题，写个博客记录下。   首先项目需求是在控制器中对若干个数据库进行数据的操作，然后当其中某一个操作发生异常，则进行事务回滚，并且其中某些操作需要读取前面对数据库增加的数据，所以数据库事务级别需要设置为READ_UNCOMMITTED   因为是第一次接触事务管理，所以按照官方文档示例，在se">
 
 
 
@@ -299,7 +299,23 @@
       
 
       
-        
+        <blockquote>
+<p>最近公司项目是用的java的ssm框架，然后需要用到事务管理，数据库是sqlserver，然后遇到一些问题，写个博客记录下。 </p>
+</blockquote>
+<p>首先项目需求是在控制器中对若干个数据库进行数据的操作，然后当其中某一个操作发生异常，则进行事务回滚，并且其中某些操作需要读取前面对数据库增加的数据，所以数据库事务级别需要设置为READ_UNCOMMITTED  </p>
+<p>因为是第一次接触事务管理，所以按照官方文档示例，在server层采用注解的方式，首先在applicationContext.xml配置文件中添加事务管理支持</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">tx:annotation-driven</span> <span class="attr">transaction-manager</span>=<span class="string">"transactionManager"</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"transactionManager"</span> <span class="attr">class</span>=<span class="string">"org.springframework.jdbc.datasource.DataSourceTransactionManager"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"dataSource"</span> <span class="attr">ref</span>=<span class="string">"dataSource"</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后在server实现类上添加注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">	<span class="meta">@Transactional</span>(</span><br><span class="line">			propagation=Propagation.REQUIRES_NEW,</span><br><span class="line">			isolation=Isolation.READ_UNCOMMITTED,</span><br><span class="line">			rollbackForClassName=<span class="string">"Exception"</span></span><br><span class="line">	)</span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">add</span><span class="params">(PO_Podetails[] data)</span> </span>&#123;</span><br></pre></td></tr></table></figure>
+
+<p>其中在注解中设置了事务的传播属性，事务隔离级别和回滚<br>但是运行发现后事务回滚虽然生效了，但是仍然查询不到本次提交的数据，初步判断事务隔离级别没有生效，在网上也并没有找到相应的解决办法，然后想尝试在controller中添加事务，采用编程式事务管理</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Resource</span></span><br><span class="line"><span class="keyword">private</span> PlatformTransactionManager transactionManager;</span><br><span class="line"><span class="meta">@ResponseBody</span></span><br><span class="line"><span class="meta">@RequestMapping</span>(<span class="string">"/submitPO_Podetails"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">submitPO_Podetails</span><span class="params">(@RequestBody PO_Podetails[] data)</span> </span>&#123;</span><br><span class="line">	 DefaultTransactionDefinition defaultTransactionDefinition = <span class="keyword">new</span> DefaultTransactionDefinition();</span><br><span class="line">    defaultTransactionDefinition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);</span><br><span class="line">    TransactionStatus status = transactionManager.getTransaction(defaultTransactionDefinition);</span><br><span class="line">    <span class="keyword">try</span>&#123;</span><br><span class="line">    	<span class="comment">//这里是对数据库的一系列操作</span></span><br><span class="line"></span><br><span class="line">    	 <span class="comment">//没有异常便手动提交事务</span></span><br><span class="line">        transactionManager.commit(status);</span><br><span class="line">        printJson(response,result(<span class="number">200</span>,<span class="string">"ok"</span>));</span><br><span class="line"></span><br><span class="line">    &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    	<span class="comment">//有异常便回滚事务</span></span><br><span class="line">        transactionManager.rollback(status);</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">        printJson(response,result(<span class="number">500</span>,<span class="string">"false"</span>));</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>然而结果还是跟前面的一样，还是读取不带脏数据，然后在控制台一条一条查看sql执行语句，发现一个奇怪的问题，同一条语句如果执行第二次则不会再执行，会调用第一次查到的数据，上网看到了相同问题，有解决方法，<br>使用spring @Transaction事务时，在for循环中需要多次执行同一查询语句，第一次查询出对象后，对对象进行修改后，结果再进行第二次查询的时候，查询返回的数据是自己第一次修改后的数据。因为业务需要每次查询都需要取更改数据库，以后的查询都会根据上一次循环修改后的值进行操作。 </p>
+<h5 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h5><p>在xml文件 select语句添加  flushCache=”true”  ，告诉mybatis查询结束后刷新缓存，不记录查询结果到一级缓存中</p>
+<h5 id="原因："><a href="#原因：" class="headerlink" title="原因："></a>原因：</h5><p>mybatis对查询的语句会存在一级缓存中，如果在一个事务中，mybatis对同一个session多次查询同一个sql语句就会去找缓存而不是再去查一次数据库</p>
+
       
     </div>
     
@@ -383,8 +399,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -426,6 +451,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#解决方法："><span class="nav-number">1.</span> <span class="nav-text">解决方法：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#原因："><span class="nav-number">2.</span> <span class="nav-text">原因：</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
