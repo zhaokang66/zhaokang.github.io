@@ -90,7 +90,7 @@
 <meta property="og:image" content="http://yoursite.com/2019/05/15/动态规划算法学习/02.jpg">
 <meta property="og:image" content="http://yoursite.com/2019/05/15/动态规划算法学习/03.png">
 <meta property="og:image" content="http://yoursite.com/2019/05/15/动态规划算法学习/04.png">
-<meta property="og:updated_time" content="2019-12-25T14:31:45.436Z">
+<meta property="og:updated_time" content="2020-01-07T06:33:05.362Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="动态规划算法学习">
 <meta name="twitter:description" content="最近在刷leetcode的题，正好遇到和动态规划相关的题目，所以打算学习一下动态规划算法，在此记录自己的学习过程与心得。  我们知道斐波拉契数列依次是1,1,2,3,5,8,13,21...即从第三项开始，数列值等于前两项之和，所以数列关系为我们用递归表示这个算法,即为: 12345int fib(n) &amp;#123;    if (n &amp;lt;= 2)         return 1;">
@@ -191,6 +191,16 @@
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
             
             Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
           </a>
         </li>
       
@@ -313,6 +323,7 @@
 <p>但是这样有个问题，如果我们令n=6，那么这个递归算法的执行规程如下：<br><img src="/2019/05/15/动态规划算法学习/02.jpg" alt="这是递归流程图"><br>我们可以看到fib(2)会被执行多次，这样极大的浪费了内存，在时间上的开销也很大，所以我们想，如果我们有办法可以把之前已经算出的结果暂时保存下来，我们后面要再遇到，就可以直接拿来用，不用再重复计算，这样就可以节省时间。<br>这样问题属于动态规划中的重叠子问题，我们先用动态规划思想重新写下斐波拉契数列的代码：</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">fib</span><span class="params">($n)</span> </span>&#123;</span><br><span class="line">    $opt = <span class="keyword">array</span>();</span><br><span class="line">    $opt[<span class="number">0</span>] = <span class="number">1</span>;</span><br><span class="line">    $opt[<span class="number">1</span>] = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">for</span> ($i = <span class="number">2</span>; $i &lt; $n - <span class="number">1</span>; $i++) &#123;</span><br><span class="line">        $opt[$i] = $opt[$i - <span class="number">1</span>] + $opt[$i - <span class="number">2</span>];<span class="comment">//这个就是动态方程</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> $opt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<a id="more"></a>
 <p>我们再看一道题：<br><strong>给定一个整数数列，要求选几个数加起来值最大，不能选相邻的数</strong><br>例如：<code>[2,8,4,6,1]</code>,则最大值为14<br>所以代码实现为：</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">dp_opt</span><span class="params">($arr)</span> </span>&#123;</span><br><span class="line">    $opt = <span class="keyword">array</span>();</span><br><span class="line">    $opt[<span class="number">0</span>] = $arr[<span class="number">0</span>];</span><br><span class="line">    $opt[<span class="number">1</span>] = max($arr[<span class="number">0</span>],$arr[<span class="number">1</span>]);</span><br><span class="line">    <span class="keyword">for</span> ($i = <span class="number">2</span>; $i &lt; count($arr) ; $i++) &#123;</span><br><span class="line">        $A = $opt[$i - <span class="number">2</span>] + $arr[$i];</span><br><span class="line">        $B = $opt[$i - <span class="number">1</span>];</span><br><span class="line">        $opt[$i] = max($A,$B);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> $opt[count($arr) - <span class="number">1</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -490,7 +501,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
