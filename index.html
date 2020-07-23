@@ -242,6 +242,137 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/07/23/关于前后端分离跨域处理和后端数据接收的一些坑/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Karmai">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Karmai's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/07/23/关于前后端分离跨域处理和后端数据接收的一些坑/" itemprop="url">关于前后端分离跨域处理和后端数据接收的一些坑</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-07-23T11:46:32+08:00">
+                2020-07-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>最近在做公司一个项目，采用的是前后端分离的开发模式，前端的技术栈是vue+element+vue-router,后端是ssm，涉及到前后端的分离首先要考虑的问题是跨域问题，其次是数据的发送和 接收以及用户状态的判断。</p>
+</blockquote>
+<h3 id="一、跨域处理"><a href="#一、跨域处理" class="headerlink" title="一、跨域处理"></a>一、跨域处理</h3><h4 id="1-为什么要跨域？"><a href="#1-为什么要跨域？" class="headerlink" title="1.为什么要跨域？"></a>1.为什么要跨域？</h4><p>这是由于浏览器的同源策略限制所引起的。它会阻止一个域的js脚本和另一个域的内容进行交互。而同源指的是两个页面的主机地址端口号和协议完全一样才是同源。比如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">url: http：www.example.com:80</span><br><span class="line">url: http：www.example.com:8082</span><br><span class="line"></span><br><span class="line">https：www.example.com:80</span><br><span class="line">http：www.example.com:80</span><br></pre></td></tr></table></figure>
+
+<p>上面的两组就是不同源，在进行数据交互时会出现跨域问题，阻止数据的请求。<br>如下图所示：<br><img src="/2020/07/23/关于前后端分离跨域处理和后端数据接收的一些坑/'./01.png'" alt></p>
+<h4 id="2-如何解决跨域问题"><a href="#2-如何解决跨域问题" class="headerlink" title="2.如何解决跨域问题"></a>2.如何解决跨域问题</h4><h5 id="2-1现在常用的跨域解决方案是CORS-跨域资源分享。"><a href="#2-1现在常用的跨域解决方案是CORS-跨域资源分享。" class="headerlink" title="2.1现在常用的跨域解决方案是CORS(跨域资源分享。"></a>2.1现在常用的跨域解决方案是CORS(跨域资源分享。</h5><p>普通的跨域请求只需要在服务器上设置响应头即可。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">HttpServletRequest httpServletRequest = (HttpServletRequest) request;</span><br><span class="line">       HttpServletResponse httpServletResponse = (HttpServletResponse) response;</span><br><span class="line">       System.out.println(<span class="string">"拦截请求: "</span> + httpServletRequest.getServletPath());</span><br><span class="line">       httpServletResponse.setHeader(<span class="string">"Access-Control-Allow-Origin"</span>, <span class="string">"*"</span>);</span><br><span class="line">       httpServletResponse.setHeader(<span class="string">"Access-Control-Allow-Methods"</span>, <span class="string">"POST, GET, OPTIONS, DELETE"</span>);</span><br><span class="line">       httpServletResponse.setHeader(<span class="string">"Access-Control-Max-Age"</span>, <span class="string">"0"</span>);</span><br><span class="line">       httpServletResponse.setHeader(<span class="string">"Access-Control-Allow-Headers"</span>,</span><br><span class="line">               <span class="string">"Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Authorization, Cache-Control, Expires, Content-Type, X-E4M-With,userId, Accept"</span>);</span><br><span class="line">       httpServletResponse.setHeader(<span class="string">"Access-Control-Allow-Credentials"</span>, <span class="string">"true"</span>);</span><br><span class="line">       httpServletResponse.setHeader(<span class="string">"XDomainRequestAllowed"</span>, <span class="string">"1"</span>);</span><br></pre></td></tr></table></figure>
+
+<p>一般情况下，比如ssm项目，上述代码会放在过滤器中。<br>还有一种情况是携带cookie的跨域请求，这种 需要前后端都需要设置。具体情况可以自行了解。</p>
+<h5 id="2-2"><a href="#2-2" class="headerlink" title="2.2"></a>2.2</h5><p>第二种常见的就是利用的nginx的反向代理，映射服务端的地址。这个感兴趣的可以自己了解（我不会&gt;_&lt;）</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/08/我的2019/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -667,7 +798,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
